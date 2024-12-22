@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LINE風メモ共有</title>
+  <link rel="stylesheet" href="../../style.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #ece5dd;
+    }
+
+    header {
+      background-color: #075e54;
+      color: white;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .back-link {
+      text-decoration: none;
+      color: white;
+      font-weight: bold;
+    }
+
+    #memo-container {
+      padding: 10px;
+      max-height: 70vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .memo {
+      display: flex;
+      flex-direction: column;
+      max-width: 80%;
+      margin: 0 auto;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .memo.sender {
+      background-color: #dcf8c6;
+      align-self: flex-end;
+    }
+
+    .memo.receiver {
+      background-color: white;
+      align-self: flex-start;
+    }
+
+    .memo-header {
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    #memo-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px;
+      background-color: #ffffff;
+      border-top: 1px solid #ccc;
+    }
+
+    #memo-form input, #memo-form textarea {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    #memo-form button {
+      background-color: #25d366;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #memo-form button:hover {
+      background-color: #1db954;
+    }
+
+    #share-url {
+      margin-top: 10px;
+      word-break: break-word;
+      color: #075e54;
+      font-weight: bold;
+    }
+
+    footer {
+      text-align: center;
+      padding: 10px;
+      font-size: 0.8rem;
+      background-color: #075e54;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>LINE風メモ共有</h1>
+    <a href="../../index.html" class="back-link">ホームに戻る</a>
+  </header>
+
+  <main>
+    <div id="memo-container"></div>
+
+    <div id="memo-form">
+      <input id="name-input" type="text" placeholder="名前を入力してください...">
+      <textarea id="memo-input" placeholder="メッセージを入力してください..."></textarea>
+      <button onclick="addMemo()">送信</button>
+      <button onclick="generateShareableURL()">リンクを共有</button>
+      <p id="share-url"></p>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2024 夢野ふのウェブツール</p>
+  </footer>
+
+  <script>
+    const memos = [];
+
+    function addMemo() {
+      const nameInput = document.getElementById('name-input');
+      const memoInput = document.getElementById('memo-input');
+      const nameText = nameInput.value.trim();
+      const memoText = memoInput.value.trim();
+
+      if (nameText === '' || memoText === '') {
+        alert('名前とメッセージを入力してください。');
+        return;
+      }
+
+      const memo = {
+        id: Date.now(),
+        name: nameText,
+        text: memoText,
+      };
+
+      memos.push(memo);
+      renderMemos();
+      nameInput.value = '';
+      memoInput.value = '';
+    }
+
+    function renderMemos() {
+      const memoContainer = document.getElementById('memo-container');
+      memoContainer.innerHTML = '';
+
+      memos.forEach((memo) => {
+        const memoDiv = document.createElement('div');
+        memoDiv.className = `memo ${memo.name === '自分' ? 'sender' : 'receiver'}`;
+
+        const memoHeader = document.createElement('div');
+        memoHeader.className = 'memo-header';
+        memoHeader.textContent = memo.name;
+
+        const memoText = document.createElement('p');
+        memoText.textContent = memo.text;
+
+        memoDiv.appendChild(memoHeader);
+        memoDiv.appendChild(memoText);
+        memoContainer.appendChild(memoDiv);
+      });
+    }
+
+    function generateShareableURL() {
+      const shareData = encodeURIComponent(JSON.stringify(memos));
+      const url = `${window.location.origin}${window.location.pathname}?data=${shareData}`;
+      const shareUrlElement = document.getElementById('share-url');
+
+      shareUrlElement.textContent = url;
+    }
+
+    function loadMemosFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      const data = params.get('data');
+
+      if (data) {
+        try {
+          const loadedMemos = JSON.parse(decodeURIComponent(data));
+          memos.push(...loadedMemos);
+          renderMemos();
+        } catch (error) {
+          console.error('メモの読み込みに失敗しました:', error);
+        }
+      }
+    }
+
+    window.onload = loadMemosFromURL;
+  </script>
+</body>
+</html>
